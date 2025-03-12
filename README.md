@@ -9,7 +9,7 @@ The backend is built using Flask, and the frontend is designed with HTML and CSS
 
 ## Link to Webpage hosted on Render
 
-You can access the live application at: [YouTube Video Storage]([https://ytvideostorage.onrender.com](https://ytvideostorage.onrender.com))  
+You can access the live application at: ([https://ytvideostorage.onrender.com](https://ytvideostorage.onrender.com))  
 **Note**: The features are not fully functional at the moment.  
 ![not functional img](image-9.png)
 
@@ -237,12 +237,6 @@ After deploying the app to Render, it failed to run properly. The issue was due 
    ```
 
 6. Open your browser and go to `http://127.0.0.1:5000/` to access the app locally.
-
----
-
-## **License**
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
