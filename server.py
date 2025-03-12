@@ -31,7 +31,7 @@ def save_videos_metadata():
     """Save videos metadata to JSON file"""
     try:
         with open(VIDEOS_JSON, 'w') as f:
-            json.dump(videos, f)
+            json.dump(videos, f, indent=4)
         logger.info(f"Saved {len(videos)} videos to metadata file")
     except Exception as e:
         logger.error(f"Error saving videos metadata: {e}")
@@ -85,6 +85,7 @@ def scan_downloads_directory():
             'duration': 0,  # We don't know the duration
             'thumbnail': '',  # No thumbnail
             'original_url': '',  # No original URL
+            'youtube_video_id': None,  # Add YouTube video ID field
             'file_size': file_size_mb  # File size in MB
         }
         new_videos_count += 1
@@ -94,10 +95,6 @@ def scan_downloads_directory():
     # Save updated metadata
     if new_videos_count > 0:
         save_videos_metadata()
-
-def sanitize_filename(title):
-    """Sanitize the filename to be safe for storage"""
-    return re.sub(r'[^\w\s-]', '', title).strip().replace(' ', '_')
 
 def get_cookie_file():
     """Get path to YouTube cookies file"""
@@ -114,45 +111,16 @@ def get_cookie_file():
     logger.warning("No cookie file found. This may cause authentication issues.")
     return None
 
-def list_available_formats(url):
-    """List available formats for a given URL"""
-    logger.info(f"Checking available formats for: {url}")
-    
-    format_opts = {
-        "skip_download": True,
-        "listformats": True,
-        "quiet": True,
-        "no_warnings": True,
-        "http_headers": {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-            "Referer": "https://www.youtube.com/"
-        }
-    }
-    
-    cookie_file = get_cookie_file()
-    if cookie_file:
-        format_opts["cookiefile"] = cookie_file
-    
-    formats = []
-    try:
-        with yt_dlp.YoutubeDL(format_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            if info and 'formats' in info:
-                return info['formats']
-    except Exception as e:
-        logger.error(f"Error listing formats: {e}")
-    
-    return formats
-
 def download_video(link):
     """Download a video from the given link"""
     try:
         # Generate a unique ID for this download
         video_id = str(uuid.uuid4())
         
-        # First, check available formats
-        formats = list_available_formats(link)
-        logger.info(f"Found {len(formats)} formats for {link}")
+        # More robust YouTube ID extraction
+        youtube_match = re.search(r'(?:v=|youtu\.be/)([^&\s]+)', link)
+        youtube_video_id = youtube_match.group(1) if youtube_match else None
+        logger.info(f"Extracted YouTube Video ID: {youtube_video_id}")
         
         # Set up download options
         ydl_opts = {
@@ -183,6 +151,7 @@ def download_video(link):
         cookie_file = get_cookie_file()
         if cookie_file:
             ydl_opts["cookiefile"] = cookie_file
+            logger.info(f"Using cookie file for download: {cookie_file}")
         
         # Download the video
         logger.info(f"Starting download for {link}")
@@ -217,6 +186,7 @@ def download_video(link):
             'duration': duration,
             'thumbnail': thumbnail,
             'original_url': link,
+            'youtube_video_id': youtube_video_id,  # Explicitly store YouTube video ID
             'file_size': file_size_mb
         }
         
@@ -303,7 +273,6 @@ def download():
             "message": f"Server error: {str(e)}"
         }), 500
 
-# Add this route to your server.py file
 @app.route("/delete/<video_id>", methods=["POST"])
 def delete_video(video_id):
     """Delete a video from the library"""
@@ -387,63 +356,30 @@ def watch_video(video_id):
     
     logger.info(f"Serving video {video_id} with content type {content_type}")
     return send_from_directory(DOWNLOAD_DIR, filename, mimetype=content_type)
+
+@app.route("/embed/<video_id>")
+def embed_video(video_id):
+    if video_id not in videos:
+        return "Video not found", 404
     
-@app.route("/debug")
-def debug_info():
-    """Endpoint to provide debug information"""
-    try:
-        # Get list of files in download directory
-        files_in_download_dir = []
-        try:
-            files_in_download_dir = os.listdir(DOWNLOAD_DIR)
-        except Exception as e:
-            files_in_download_dir = [f"Error listing files: {str(e)}"]
-        
-        # Check for missing files
-        missing_files = []
-        for video_id, video_info in videos.items():
-            filepath = os.path.join(DOWNLOAD_DIR, video_info['filename'])
-            if not os.path.exists(filepath):
-                missing_files.append(video_info['filename'])
-        
-        # Check cookie files
-        cookie_files = [
-            "youtube_cookies.txt",
-            "cookies.txt"
-        ]
-        cookie_status = {}
-        for cf in cookie_files:
-            cookie_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), cf)
-            exists = os.path.exists(cookie_path)
-            size = 0
-            if exists:
-                size = os.path.getsize(cookie_path)
-            cookie_status[cf] = {
-                "exists": exists,
-                "size_bytes": size,
-                "readable": os.access(cookie_path, os.R_OK) if exists else False
-            }
-        
-        info = {
-            "app_directory": os.getcwd(),
-            "static_folder": app.static_folder,
-            "download_directory": DOWNLOAD_DIR,
-            "download_dir_exists": os.path.exists(DOWNLOAD_DIR),
-            "download_dir_writable": os.access(DOWNLOAD_DIR, os.W_OK),
-            "download_dir_readable": os.access(DOWNLOAD_DIR, os.R_OK),
-            "files_in_download_dir": files_in_download_dir,
-            "videos_count": len(videos),
-            "videos_keys": list(videos.keys()),
-            "missing_files": missing_files,
-            "cookie_files": cookie_status,
-            "routes": [str(rule) for rule in app.url_map.iter_rules()],
-            "yt_dlp_version": yt_dlp.version.__version__
-        }
-        
-        return jsonify(info)
-    except Exception as e:
-        logger.error(f"Error in debug route: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+    video_info = videos[video_id]
+    
+    # Multiple methods to extract YouTube ID
+    youtube_id = None
+    
+    # 1. Check stored YouTube video ID
+    youtube_id = video_info.get('youtube_video_id')
+    
+    # 2. Extract from original URL if not found
+    if not youtube_id and video_info.get('original_url'):
+        match = re.search(r'(?:v=|youtu\.be/)([^&\s]+)', video_info['original_url'])
+        if match:
+            youtube_id = match.group(1)
+    
+    # Log the YouTube ID for debugging
+    logger.info(f"Embed route - YouTube ID: {youtube_id}")
+    
+    return render_template("embed.html", video=video_info, youtube_id=youtube_id)
 
 # Create required directories
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
