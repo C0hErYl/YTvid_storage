@@ -6,6 +6,7 @@ import re
 import json
 import glob
 from pathlib import Path
+from youtube_auth import get_youtube_cookies_path
 
 app = Flask(__name__, static_folder='static')
 
@@ -91,7 +92,7 @@ def download_video(link):
         # Generate a unique ID for this download
         video_id = str(uuid.uuid4())
         
-        # Set download options with user-agent and referer headers to avoid bot detection
+        # Set download options with user-agent, referer headers, and cookies to avoid bot detection
         ydl_opts = {
             "format": "best[ext=mp4]/best",  # Single file format that doesn't require merging
             "outtmpl": os.path.join(DOWNLOAD_DIR, f"{video_id}.%(ext)s"),  # Save with unique ID
@@ -99,8 +100,15 @@ def download_video(link):
             "http_headers": {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
                 "Referer": "https://www.youtube.com/"
-            }
+            },
+            "cookiesfrombrowser": ("chrome",),  # Try to use cookies from Chrome
+            "verbose": True  # Add verbose output for debugging
         }
+        
+        # Try to get cookies file if available
+        cookies_path = get_youtube_cookies_path()
+        if cookies_path:
+            ydl_opts["cookiefile"] = cookies_path
         
         # Get video info first
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:

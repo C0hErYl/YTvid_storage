@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Don't ignore YouTube cookies file
+!youtube_cookies.txt
 *.so
 .Python
 env/
