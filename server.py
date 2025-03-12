@@ -364,9 +364,20 @@ def serve_video(video_id):
 @app.route("/watch/<video_id>")
 def watch_video(video_id):
     if video_id not in videos:
+        logger.error(f"Video ID {video_id} not found in videos dictionary")
         return "Video not found", 404
     
     filename = videos[video_id]['filename']
+    filepath = os.path.join(DOWNLOAD_DIR, filename)
+    
+    # Check if file exists and logs
+    file_exists = os.path.exists(filepath)
+    logger.info(f"File {filepath} exists: {file_exists}")
+    
+    if not file_exists:
+        logger.error(f"File {filepath} does not exist")
+        return "Video file not found", 404
+    
     # Determine content type based on file extension
     content_type = "video/mp4"
     if filename.endswith(".webm"):
@@ -374,6 +385,7 @@ def watch_video(video_id):
     elif filename.endswith(".mkv"):
         content_type = "video/x-matroska"
     
+    logger.info(f"Serving video {video_id} with content type {content_type}")
     return send_from_directory(DOWNLOAD_DIR, filename, mimetype=content_type)
     
 @app.route("/debug")
@@ -385,7 +397,7 @@ def debug_info():
             missing_files.append(video_info['filename'])
 
     info["missing_files"] = missing_files
-    
+
     """Endpoint to provide debug information"""
     try:
         # Get list of files in download directory
