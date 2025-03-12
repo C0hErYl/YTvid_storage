@@ -1,8 +1,8 @@
-Certainly! Below is the restructured and reformatted content into a well-organized **README.md**:
 
+```
 # YouTube Video Sharing Web App
 
-This project is a web-based application that allows users to download YouTube videos and share them in real-time. The application runs on the Flask development server and provides a simple interface for users to interact with. 
+This project is a web-based application that allows users to download YouTube videos and share them in real-time. The application runs on the Flask development server and provides a simple interface for users to interact with.
 
 The backend is built using Flask, and the frontend is designed with HTML and CSS. The app is deployed using Docker on Render, and Gunicorn is used as the WSGI server for production deployment.
 
@@ -241,10 +241,17 @@ After deploying the app to Render, it failed to run properly. The issue was due 
 
 ---
 
+## **License**
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
 ## **Acknowledgements**
 
 - Flask documentation
 - Gunicorn documentation
 - Render platform
 - Docker community
-- Internet
+```
+
