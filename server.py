@@ -121,9 +121,8 @@ def list_available_formats(url):
     format_opts = {
         "skip_download": True,
         "listformats": True,
-        "quiet": False,
-        "no_warnings": False,
-        "ignoreerrors": True,
+        "quiet": True,
+        "no_warnings": True,
         "http_headers": {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
             "Referer": "https://www.youtube.com/"
@@ -151,38 +150,17 @@ def download_video(link):
         # Generate a unique ID for this download
         video_id = str(uuid.uuid4())
         
-        # First try to extract basic info without downloading to verify the URL works
-        pre_check_opts = {
-            "skip_download": True,
-            "quiet": False,
-            "no_warnings": False,
-            "ignoreerrors": False
-        }
+        # First, check available formats
+        formats = list_available_formats(link)
+        logger.info(f"Found {len(formats)} formats for {link}")
         
-        cookie_file = get_cookie_file()
-        if cookie_file:
-            pre_check_opts["cookiefile"] = cookie_file
-        
-        logger.info(f"Pre-checking video info for: {link}")
-        try:
-            with yt_dlp.YoutubeDL(pre_check_opts) as ydl:
-                pre_info = ydl.extract_info(link, download=False, process=False)
-                if pre_info:
-                    logger.info(f"Pre-check successful: {pre_info.get('title', 'Unknown')}")
-                else:
-                    logger.warning(f"Pre-check returned no info for {link}")
-        except Exception as e:
-            logger.error(f"Pre-check failed: {e}")
-            # Continue anyway, as the main download might still work
-        
-        # Set up download options with multiple fallback strategies
+        # Set up download options
         ydl_opts = {
-            # Try multiple format strategies
-            "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/bestvideo+bestaudio/best",
+            "format": "bestvideo+bestaudio/best",  # More flexible format selection
             "outtmpl": os.path.join(DOWNLOAD_DIR, f"{video_id}.%(ext)s"),
             "noplaylist": True,
             "merge_output_format": "mp4",
-            "ignoreerrors": False,
+            "ignoreerrors": True,
             "no_warnings": False,
             "verbose": True,
             "geo_bypass": True,
@@ -192,17 +170,17 @@ def download_video(link):
             "extractor_args": {
                 "youtube": {
                     "player_client": ["android", "web"],
-                    "player_skip": ["configs", "webpage"]
                 }
             },
             "http_headers": {
-                "User-Agent": "Mozilla/5.0 (Linux; Android 12; SM-S906N Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
                 "Accept-Language": "en-US,en;q=0.9",
                 "Referer": "https://www.youtube.com/"
             }
         }
         
         # Add cookies if available
+        cookie_file = get_cookie_file()
         if cookie_file:
             ydl_opts["cookiefile"] = cookie_file
         
@@ -290,12 +268,6 @@ def download_video(link):
             return {
                 "success": False,
                 "message": "This video is unavailable. It may have been removed or set to private."
-            }
-        
-        if "Failed to extract video information" in error_message:
-            return {
-                "success": False,
-                "message": "Failed to extract video information. This video may have special restrictions or the URL format might be incorrect."
             }
         
         return {
