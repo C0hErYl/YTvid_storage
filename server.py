@@ -91,11 +91,15 @@ def download_video(link):
         # Generate a unique ID for this download
         video_id = str(uuid.uuid4())
         
-        # Set download options
+        # Set download options with user-agent and referer headers to avoid bot detection
         ydl_opts = {
             "format": "best[ext=mp4]/best",  # Single file format that doesn't require merging
             "outtmpl": os.path.join(DOWNLOAD_DIR, f"{video_id}.%(ext)s"),  # Save with unique ID
             "noplaylist": True,
+            "http_headers": {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+                "Referer": "https://www.youtube.com/"
+            }
         }
         
         # Get video info first

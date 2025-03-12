@@ -1,0 +1,7 @@
+# In your download_video function, update the ydl_opts:
+ydl_opts = {
+    "format": "best[ext=mp4]/best",
+    "outtmpl": os.path.join(DOWNLOAD_DIR, f"{video_id}.%(ext)s"),
+    "noplaylist": True,
+    "cookiefile": "cookies.txt"  # Add this line
+}
