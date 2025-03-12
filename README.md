@@ -9,7 +9,7 @@ The backend is built using Flask, and the frontend is designed with HTML and CSS
 
 ## Link to Webpage hosted on Render
 
-You can access the live application at: [YouTube Video Storage](https://ytvideostorage.onrender.com)  
+You can access the live application at: [YouTube Video Storage]([https://ytvideostorage.onrender.com](https://ytvideostorage.onrender.com))  
 **Note**: The features are not fully functional at the moment.  
 ![not functional img](image-9.png)
 
