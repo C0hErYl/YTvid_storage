@@ -145,28 +145,35 @@ def list_available_formats(url):
     return formats
 
 def download_video(link):
+    """Download a video from the given link"""
     try:
         # Generate a unique ID for this download
         video_id = str(uuid.uuid4())
         
-        # More extensive options to bypass restrictions
+        # First, check available formats
+        formats = list_available_formats(link)
+        logger.info(f"Found {len(formats)} formats for {link}")
+        
+        # Set up download options
         ydl_opts = {
-            "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+            "format": "bestvideo+bestaudio/best",  # More flexible format selection
             "outtmpl": os.path.join(DOWNLOAD_DIR, f"{video_id}.%(ext)s"),
             "noplaylist": True,
             "merge_output_format": "mp4",
-            "ignoreerrors": False,  # Change to False to get more detailed errors
+            "ignoreerrors": True,
             "no_warnings": False,
             "verbose": True,
             "geo_bypass": True,
+            "postprocessor_args": {
+                'ffmpeg': ['-c:v', 'libx264', '-c:a', 'aac']
+            },
             "extractor_args": {
                 "youtube": {
-                    "player_client": ["android", "ios", "web"],  # Try multiple clients
-                    "player_skip": ["configs"]
+                    "player_client": ["android", "web"],
                 }
             },
             "http_headers": {
-                "User-Agent": "Mozilla/5.0 (Linux; Android 12; SM-S906N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
                 "Accept-Language": "en-US,en;q=0.9",
                 "Referer": "https://www.youtube.com/"
             }
@@ -177,11 +184,8 @@ def download_video(link):
         if cookie_file:
             ydl_opts["cookiefile"] = cookie_file
         
-        # Print more debug info
-        logger.info(f"Attempting to download: {link}")
-        logger.info(f"Using options: {ydl_opts}")
-        
         # Download the video
+        logger.info(f"Starting download for {link}")
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(link, download=True)
             
@@ -384,7 +388,6 @@ def watch_video(video_id):
     logger.info(f"Serving video {video_id} with content type {content_type}")
     return send_from_directory(DOWNLOAD_DIR, filename, mimetype=content_type)
     
-
 @app.route("/debug")
 def debug_info():
     """Endpoint to provide debug information"""
@@ -441,60 +444,6 @@ def debug_info():
     except Exception as e:
         logger.error(f"Error in debug route: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
-@app.route("/test_extract", methods=["POST"])
-def test_extract():
-    data = request.get_json()
-    link = data.get("url", "")
-    if not link:
-        return jsonify({"success": False, "message": "No URL provided"}), 400
-        
-    try:
-        ydl_opts = {
-            "skip_download": True,
-            "verbose": True
-        }
-        
-        cookie_file = get_cookie_file()
-        if cookie_file:
-            ydl_opts["cookiefile"] = cookie_file
-            
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(link, download=False)
-            if info:
-                return jsonify({
-                    "success": True,
-                    "title": info.get('title'),
-                    "duration": info.get('duration'),
-                    "formats_available": len(info.get('formats', []))
-                })
-            else:
-                return jsonify({"success": False, "message": "No info extracted"})
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)})
-    
-@app.route("/embed/<video_id>")
-def embed_video(video_id):
-    """Embed a YouTube video directly"""
-    if video_id not in videos:
-        return "Video not found", 404
-    
-    video_info = videos[video_id]
-    youtube_id = None
-    
-    # Try to extract YouTube ID from the original URL
-    if video_info['original_url']:
-        try:
-            youtube_regex = r'(?:youtu\.be/|youtube\.com/(?:embed/|v/|watch\?v=|watch\?.+&v=))([^&?/]+)'
-            match = re.search(youtube_regex, video_info['original_url'])
-            if match:
-                youtube_id = match.group(1)
-        except Exception as e:
-            logger.error(f"Error extracting YouTube ID: {e}")
-    
-    return render_template("embed.html", video=video_info, youtube_id=youtube_id)
-
-
 
 # Create required directories
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)

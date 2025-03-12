@@ -1,7 +1,7 @@
 
 
 ## **YouTube Video Downloader** 🎥📥  
-This is a simple **web-based YouTube video downloader** built with **Flask (Python backend)** and **HTML, JavaScript (frontend)**. It allows users to enter a YouTube link and download the video in MP4 format (up to 1080p).  
+This is a simple **web-based YouTube video downloader** built with **Flask (Python backend)** and **HTML, JavaScript (frontend)**. It allows users to enter a YouTube link and download the video in MP4 format.  
 
 ---
 
@@ -78,8 +78,71 @@ sudo apt install ffmpeg  # Ubuntu/Linux
 ## **📜 License**  
 This project is **open-source** and free to use.  
 
-test1: (issue: bad bot - need sign in)
-use render image success deployment:
-![render image success deployment](image.png)
 
-to fix that in test 2
+***
+
+
+# YouTube Video Sharing Web App
+
+This project is a web-based application that allows users to download YouTube videos and share them in real-time. The application runs on the Flask development server and provides a simple interface for users to interact with. 
+
+The backend is built using Flask, and the frontend is designed with HTML and CSS. The app is deployed using Docker on Render, and Gunicorn is used as the WSGI server for production deployment.
+
+## Link to Live App
+
+You can access the live application at: [YouTube Video Storage](https://ytvideostorage.onrender.com)
+
+## Tech Stack
+
+- **Backend**: Flask (Python)
+- **Frontend**: HTML, CSS
+- **Deployment**: Render (Platform as a Service)
+- **Containerization**: Docker
+- **WSGI Server**: Gunicorn
+- **Version Control**: Git
+- **Cookies Handling**: Python (for reading YouTube cookies)
+- **Database**: (Optional - can just run `server.py` directly without the need for Render services)
+
+## Steps to Set Up and Deploy
+
+### 1. Flask Backend Development
+
+The backend is powered by Flask, a lightweight web framework for Python. The user interface is created using simple HTML and CSS, ensuring a responsive and clean design.
+
+### 2. Docker for Containerization
+
+The application is containerized using Docker to simplify deployment and scaling. Docker ensures consistency across environments and provides a reliable way to deploy the app on Render.
+
+### 3. Gunicorn for WSGI
+
+For production environments, the application is served using **Gunicorn**, which is a WSGI (Web Server Gateway Interface) HTTP server. It is used to handle HTTP requests to the Flask app.
+
+### 4. Deployment on Render
+
+Render is used to deploy the app on a cloud platform whichs provides free hosting with containerized deployment and automatic scaling.
+
+## Issues and Solutions
+
+### Test 1: **Bad Bot - Need Sign In**
+
+![Bad Bot Error](image-1.png)
+
+During the initial testing, I encountered a "Bad Bot" error while trying to download YouTube videos. This was due to YouTube requiring a sign-in to access certain videos. This issue was resolved after implementing cookie handling, which bypasses the need for a sign-in by reading YouTube cookies.
+
+### Test 2: **File Cannot Read Format**
+
+![File Cannot Read](image-3.png)
+
+The issue was that the app could not properly read the format of the file, resulting in a failure to fetch the video. The solution was to install a **cookies extension** to save the YouTube cookies into a text file. This allowed the app to read the cookies file successfully, bypassing the sign-in process and enabling smooth video downloads.
+
+### Test 3: **Cannot Run When Deployed to Render**
+
+After deploying the app to Render, it failed to run properly. The issue was due to incorrect environment configurations. However, after making the necessary adjustments to the environment settings and ensuring the correct versions of dependencies were installed, the app was successfully deployed and is now accessible on Render.
+
+![Render Deployment Success](image.png)
+
+## How to Run Locally
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/yt-video-sharing-app.git
