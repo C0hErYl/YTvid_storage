@@ -378,6 +378,14 @@ def watch_video(video_id):
     
 @app.route("/debug")
 def debug_info():
+    missing_files = []
+    for video_id, video_info in videos.items():
+        filepath = os.path.join(DOWNLOAD_DIR, video_info['filename'])
+        if not os.path.exists(filepath):
+            missing_files.append(video_info['filename'])
+
+    info["missing_files"] = missing_files
+    
     """Endpoint to provide debug information"""
     try:
         # Get list of files in download directory
