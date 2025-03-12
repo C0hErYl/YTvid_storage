@@ -92,22 +92,36 @@ def download_video(link):
         # Generate a unique ID for this download
         video_id = str(uuid.uuid4())
         
-        # Set download options with user-agent and referer headers to avoid bot detection
+        # Enhanced download options to bypass bot detection
         ydl_opts = {
             "format": "best[ext=mp4]/best",  # Single file format that doesn't require merging
             "outtmpl": os.path.join(DOWNLOAD_DIR, f"{video_id}.%(ext)s"),  # Save with unique ID
             "noplaylist": True,
+            "geo_bypass": True,  # Try to bypass geo-restriction
+            "extractor_args": {
+                "youtube": {
+                    "player_client": ["android"],  # Use android client which often has fewer restrictions
+                    "skip": ["webpage"]  # Skip webpage verification
+                }
+            },
             "http_headers": {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+                "User-Agent": "Mozilla/5.0 (Linux; Android 12; SM-S906N Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.101 Mobile Safari/537.36",
+                "Accept-Language": "en-US,en;q=0.9",
                 "Referer": "https://www.youtube.com/"
             }
         }
         
-        # Try to use cookies file if it exists
-        cookie_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'youtube_cookies.txt')
-        if os.path.exists(cookie_file):
-            print(f"Using cookie file: {cookie_file}")
-            ydl_opts["cookiefile"] = cookie_file
+        # Try both files - cookies.txt and youtube_cookies.txt
+        cookie_files = [
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'youtube_cookies.txt'),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cookies.txt')
+        ]
+        
+        for cookie_file in cookie_files:
+            if os.path.exists(cookie_file):
+                print(f"Using cookie file: {cookie_file}")
+                ydl_opts["cookiefile"] = cookie_file
+                break
         
         # Get video info first
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -161,7 +175,7 @@ def download_video(link):
         if "Sign in to confirm you're not a bot" in error_message:
             return {
                 "success": False, 
-                "message": "YouTube requires authentication. Please upload a youtube_cookies.txt file to the server."
+                "message": "YouTube requires authentication. Please make sure you have a valid youtube_cookies.txt file from a logged-in YouTube account."
             }
         
         return {
