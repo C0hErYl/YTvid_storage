@@ -1,4 +1,6 @@
-###linK to Webpage hosted on Render: https://ytvideostorage.onrender.com
+### linK to Webpage hosted on Render: https://ytvideostorage.onrender.com
+#### NOTE: the link is to view features are not functional
+![not functtional img](image-9.png)
 
 ## **YouTube Video Downloader** 🎥📥  
 This is a simple **web-based YouTube video downloader** built with **Flask (Python backend)** and **HTML, JavaScript (frontend)**. It allows users to enter a YouTube link and download the video in MP4 format.  
