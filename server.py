@@ -92,7 +92,7 @@ def download_video(link):
         # Generate a unique ID for this download
         video_id = str(uuid.uuid4())
         
-        # Set download options with user-agent, referer headers, and cookies to avoid bot detection
+        # Set download options with user-agent and referer headers to avoid bot detection
         ydl_opts = {
             "format": "best[ext=mp4]/best",  # Single file format that doesn't require merging
             "outtmpl": os.path.join(DOWNLOAD_DIR, f"{video_id}.%(ext)s"),  # Save with unique ID
@@ -100,15 +100,14 @@ def download_video(link):
             "http_headers": {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
                 "Referer": "https://www.youtube.com/"
-            },
-            "cookiesfrombrowser": ("chrome",),  # Try to use cookies from Chrome
-            "verbose": True  # Add verbose output for debugging
+            }
         }
         
-        # Try to get cookies file if available
-        cookies_path = get_youtube_cookies_path()
-        if cookies_path:
-            ydl_opts["cookiefile"] = cookies_path
+        # Try to use cookies file if it exists
+        cookie_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'youtube_cookies.txt')
+        if os.path.exists(cookie_file):
+            print(f"Using cookie file: {cookie_file}")
+            ydl_opts["cookiefile"] = cookie_file
         
         # Get video info first
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -156,6 +155,13 @@ def download_video(link):
             return {
                 "success": False,
                 "message": "Download failed: FFmpeg is not installed. Please install FFmpeg or use a different format."
+            }
+        
+        # If it's a 'sign in to confirm' error, provide more helpful message
+        if "Sign in to confirm you're not a bot" in error_message:
+            return {
+                "success": False, 
+                "message": "YouTube requires authentication. Please upload a youtube_cookies.txt file to the server."
             }
         
         return {
