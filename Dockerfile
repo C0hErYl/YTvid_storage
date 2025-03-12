@@ -2,23 +2,23 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install FFmpeg only
+# Install FFmpeg for video processing
 RUN apt-get update && \
     apt-get install -y ffmpeg && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Copy requirements and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code
+# Copy application files
 COPY . .
 
-# Create necessary directories
+# Create directories
 RUN mkdir -p static/downloads
 
-# Expose the port
+# Expose port
 EXPOSE 10000
 
 # Command to run the application

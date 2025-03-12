@@ -2,9 +2,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Don't ignore YouTube cookies file
-!youtube_cookies.txt
 *.so
 .Python
 env/
@@ -29,9 +26,11 @@ ENV/
 
 # Downloaded Videos
 static/downloads/*.mp4
+static/downloads/*.webm
+static/downloads/*.mkv
 
-# Video metadata
-static/videos.json
+# Don't ignore placeholder image
+!static/placeholder-thumbnail.jpg
 
 # IDE
 .idea/
