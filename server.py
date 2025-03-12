@@ -92,26 +92,17 @@ def download_video(link):
         # Generate a unique ID for this download
         video_id = str(uuid.uuid4())
         
-        # Enhanced download options to bypass bot detection
-        ydl_opts = {
-            "format": "best[ext=mp4]/best",  # Single file format that doesn't require merging
-            "outtmpl": os.path.join(DOWNLOAD_DIR, f"{video_id}.%(ext)s"),  # Save with unique ID
-            "noplaylist": True,
-            "geo_bypass": True,  # Try to bypass geo-restriction
-            "extractor_args": {
-                "youtube": {
-                    "player_client": ["android"],  # Use android client which often has fewer restrictions
-                    "skip": ["webpage"]  # Skip webpage verification
-                }
-            },
+        # First, just get the available formats
+        format_opts = {
+            "skip_download": True,
+            "listformats": True,
             "http_headers": {
-                "User-Agent": "Mozilla/5.0 (Linux; Android 12; SM-S906N Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.101 Mobile Safari/537.36",
-                "Accept-Language": "en-US,en;q=0.9",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
                 "Referer": "https://www.youtube.com/"
             }
         }
         
-        # Try both files - cookies.txt and youtube_cookies.txt
+        # Try to use cookies file if it exists
         cookie_files = [
             os.path.join(os.path.dirname(os.path.abspath(__file__)), 'youtube_cookies.txt'),
             os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cookies.txt')
@@ -120,22 +111,45 @@ def download_video(link):
         for cookie_file in cookie_files:
             if os.path.exists(cookie_file):
                 print(f"Using cookie file: {cookie_file}")
-                ydl_opts["cookiefile"] = cookie_file
+                format_opts["cookiefile"] = cookie_file
                 break
         
-        # Get video info first
+        # First just check available formats
+        print(f"Checking available formats for: {link}")
+        with yt_dlp.YoutubeDL(format_opts) as ydl:
+            # This will print available formats but not download
+            ydl.extract_info(link, download=False)
+        
+        # Now set up the actual download with a more flexible format selection
+        ydl_opts = {
+            "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",  # More flexible format selection
+            "outtmpl": os.path.join(DOWNLOAD_DIR, f"{video_id}.%(ext)s"),  # Save with unique ID
+            "noplaylist": True,
+            "merge_output_format": "mp4",  # Ensure final output is MP4
+            "http_headers": {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+                "Referer": "https://www.youtube.com/"
+            }
+        }
+        
+        # Use the same cookie file if found earlier
+        if "cookiefile" in format_opts:
+            ydl_opts["cookiefile"] = format_opts["cookiefile"]
+        
+        # Get video info and download
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(link, download=False)
+            info = ydl.extract_info(link, download=True)
             title = info.get('title', 'Unknown Title')
             duration = info.get('duration', 0)
             thumbnail = info.get('thumbnail', '')
-            
-            # Perform the download
-            ydl.download([link])
         
-        # Store video info
-        filename = f"{video_id}.mp4"
-        filepath = os.path.join(DOWNLOAD_DIR, filename)
+        # Find the downloaded file (might have a different extension)
+        downloaded_files = glob.glob(os.path.join(DOWNLOAD_DIR, f"{video_id}.*"))
+        if not downloaded_files:
+            raise Exception("File was not downloaded correctly")
+        
+        filepath = downloaded_files[0]
+        filename = os.path.basename(filepath)
         
         # Get file size
         file_size = os.path.getsize(filepath)
@@ -169,6 +183,13 @@ def download_video(link):
             return {
                 "success": False,
                 "message": "Download failed: FFmpeg is not installed. Please install FFmpeg or use a different format."
+            }
+        
+        # If it's a format issue, provide a more helpful message
+        if "Requested format is not available" in error_message:
+            return {
+                "success": False,
+                "message": "Could not find the requested video format. The video might be restricted or unavailable in MP4 format."
             }
         
         # If it's a 'sign in to confirm' error, provide more helpful message
