@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ video.title }} - Video Player</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .video-container {
+            width: 100%;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        video {
+            width: 100%;
+            display: block;
+        }
+        .video-info {
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+        }
+        .back-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #4285f4;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .back-button:hover {
+            background-color: #3367d6;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ video.title }}</h1>
+    
+    <div class="video-container">
+        <video controls autoplay>
+            <source src="/watch/{{ video.id }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    
+    <div class="video-info">
+        <p><strong>Duration:</strong> {{ video.duration // 60 }}:{{ '%02d' % (video.duration % 60) }}</p>
+        <p><strong>File Size:</strong> {{ video.file_size }} MB</p>
+        {% if video.original_url %}
+        <p><strong>Source:</strong> <a href="{{ video.original_url }}" target="_blank">Original Video</a></p>
+        {% endif %}
+    </div>
+    
+    <a href="/" class="back-button">Back to Library</a>
+</body>
+</html>

@@ -218,14 +218,17 @@ def debug_info():
     
     return jsonify(info)
 
+# Create required directories
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+
+# Load existing videos metadata
+load_videos_metadata()
+
+# Scan downloads directory for video files
+scan_downloads_directory()
+
+# Changed the app.run for production use
 if __name__ == "__main__":
-    # Create required directories
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-    
-    # Load existing videos metadata
-    load_videos_metadata()
-    
-    # Scan downloads directory for video files
-    scan_downloads_directory()
-    
-    app.run(debug=True)
+    # Get port from environment variable or default to 10000
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port, debug=False)
