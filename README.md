@@ -78,6 +78,8 @@ sudo apt install ffmpeg  # Ubuntu/Linux
 ## **📜 License**  
 This project is **open-source** and free to use.  
 
-
+test1: (issue: bad bot - need sign in)
 use render image success deployment:
 ![render image success deployment](image.png)
+
+to fix that in test 2
