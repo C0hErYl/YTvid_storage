@@ -303,6 +303,46 @@ def download():
             "message": f"Server error: {str(e)}"
         }), 500
 
+# Add this route to your server.py file
+@app.route("/delete/<video_id>", methods=["POST"])
+def delete_video(video_id):
+    """Delete a video from the library"""
+    try:
+        if video_id not in videos:
+            return jsonify({"success": False, "message": "Video not found"}), 404
+        
+        # Get the filename before removing from dictionary
+        filename = videos[video_id]['filename']
+        filepath = os.path.join(DOWNLOAD_DIR, filename)
+        
+        # Try to delete the file
+        try:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+                logger.info(f"Deleted file: {filepath}")
+            else:
+                logger.warning(f"File not found for deletion: {filepath}")
+        except Exception as e:
+            logger.error(f"Error deleting file {filepath}: {e}")
+            # We'll still remove it from the dictionary even if file deletion fails
+        
+        # Remove from our videos dictionary
+        del videos[video_id]
+        
+        # Save updated metadata
+        save_videos_metadata()
+        
+        return jsonify({
+            "success": True,
+            "message": "Video deleted successfully"
+        })
+    except Exception as e:
+        logger.error(f"Error in delete_video route: {str(e)}")
+        return jsonify({
+            "success": False, 
+            "message": f"Error deleting video: {str(e)}"
+        }), 500
+    
 @app.route("/videos")
 def list_videos():
     try:
