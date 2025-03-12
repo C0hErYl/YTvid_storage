@@ -388,16 +388,9 @@ def watch_video(video_id):
     logger.info(f"Serving video {video_id} with content type {content_type}")
     return send_from_directory(DOWNLOAD_DIR, filename, mimetype=content_type)
     
+
 @app.route("/debug")
 def debug_info():
-    missing_files = []
-    for video_id, video_info in videos.items():
-        filepath = os.path.join(DOWNLOAD_DIR, video_info['filename'])
-        if not os.path.exists(filepath):
-            missing_files.append(video_info['filename'])
-
-    info["missing_files"] = missing_files
-
     """Endpoint to provide debug information"""
     try:
         # Get list of files in download directory
@@ -406,6 +399,13 @@ def debug_info():
             files_in_download_dir = os.listdir(DOWNLOAD_DIR)
         except Exception as e:
             files_in_download_dir = [f"Error listing files: {str(e)}"]
+        
+        # Check for missing files
+        missing_files = []
+        for video_id, video_info in videos.items():
+            filepath = os.path.join(DOWNLOAD_DIR, video_info['filename'])
+            if not os.path.exists(filepath):
+                missing_files.append(video_info['filename'])
         
         # Check cookie files
         cookie_files = [
@@ -435,6 +435,7 @@ def debug_info():
             "files_in_download_dir": files_in_download_dir,
             "videos_count": len(videos),
             "videos_keys": list(videos.keys()),
+            "missing_files": missing_files,
             "cookie_files": cookie_status,
             "routes": [str(rule) for rule in app.url_map.iter_rules()],
             "yt_dlp_version": yt_dlp.version.__version__
@@ -444,6 +445,29 @@ def debug_info():
     except Exception as e:
         logger.error(f"Error in debug route: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@app.route("/embed/<video_id>")
+def embed_video(video_id):
+    """Embed a YouTube video directly"""
+    if video_id not in videos:
+        return "Video not found", 404
+    
+    video_info = videos[video_id]
+    youtube_id = None
+    
+    # Try to extract YouTube ID from the original URL
+    if video_info['original_url']:
+        try:
+            youtube_regex = r'(?:youtu\.be/|youtube\.com/(?:embed/|v/|watch\?v=|watch\?.+&v=))([^&?/]+)'
+            match = re.search(youtube_regex, video_info['original_url'])
+            if match:
+                youtube_id = match.group(1)
+        except Exception as e:
+            logger.error(f"Error extracting YouTube ID: {e}")
+    
+    return render_template("embed.html", video=video_info, youtube_id=youtube_id)
+
+
 
 # Create required directories
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)

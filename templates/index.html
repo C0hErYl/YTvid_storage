@@ -378,6 +378,13 @@
                 grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             }
         }
+        .embed-button {
+    background-color: rgba(0, 128, 255, 0.7);
+}
+
+.embed-button:hover {
+    background-color: rgba(0, 128, 255, 0.9);
+}
     </style>
 </head>
 <body>
@@ -578,6 +585,10 @@
                             <div class="video-title">${video.title}</div>
                             <div class="video-duration">${durationText} · ${fileSizeText}</div>
                         </div>
+                        <div class="video-actions">
+    <button class="action-button embed-button" title="Embed" onclick="embedVideo(event, '${video.id}')">▶</button>
+    <button class="action-button delete-button" title="Delete" onclick="confirmDeleteVideo(event, '${video.id}')">✕</button>
+</div>
                     `;
                     
                     // Add click handler for playing the video (but not when clicking delete button)
@@ -738,6 +749,13 @@
                 showStatus(`Error: ${error.message}`, false);
             });
         }
+        function embedVideo(event, videoId) {
+    // Stop the event from bubbling up to parent elements
+    event.stopPropagation();
+    
+    // Redirect to the embed page
+    window.location.href = `/embed/${videoId}`;
+}
     </script>
 </body>
 </html>
