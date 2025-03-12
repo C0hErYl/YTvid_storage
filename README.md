@@ -1,5 +1,4 @@
 
-```
 # YouTube Video Sharing Web App
 
 This project is a web-based application that allows users to download YouTube videos and share them in real-time. The application runs on the Flask development server and provides a simple interface for users to interact with.
