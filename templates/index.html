@@ -5,107 +5,180 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Video Downloader</title>
     <style>
+        :root {
+            --primary-color: #ff0000;
+            --primary-dark: #cc0000;
+            --success-color: #4CAF50;
+            --error-color: #f44336;
+            --bg-light: #f5f5f5;
+            --border-color: #ddd;
+        }
+        
         body {
             font-family: Arial, sans-serif;
             max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #fff;
+            color: #333;
         }
+        
+        h1, h2 {
+            color: #111;
+        }
+        
         .container {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
+        
         .downloader {
-            background-color: #f5f5f5;
+            background-color: var(--bg-light);
             padding: 20px;
             border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        
         .input-group {
             display: flex;
             gap: 10px;
             margin-bottom: 15px;
         }
+        
         input {
             flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
+            padding: 12px;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
+            font-size: 16px;
         }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(255,0,0,0.1);
+        }
+        
         button {
-            background-color: #ff0000;
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 12px 20px;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.2s, transform 0.1s;
         }
+        
         button:hover {
-            background-color: #cc0000;
+            background-color: var(--primary-dark);
         }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
         .status {
-            margin-top: 10px;
-            padding: 10px;
+            margin-top: 15px;
+            padding: 15px;
             border-radius: 4px;
+            font-size: 16px;
         }
+        
         .success {
-            background-color: #e6ffe6;
-            color: #006600;
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
         }
+        
         .error {
-            background-color: #ffe6e6;
-            color: #cc0000;
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
         }
+        
         .video-library {
             margin-top: 30px;
         }
+        
         .video-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
             margin-top: 20px;
         }
+        
         .video-card {
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             overflow: hidden;
-            transition: transform 0.2s;
+            transition: transform 0.3s, box-shadow 0.3s;
             cursor: pointer;
+            background-color: #fff;
         }
+        
         .video-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
         }
+        
         .video-thumbnail {
             width: 100%;
-            height: 150px;
+            height: 180px;
             object-fit: cover;
             background-color: #eee;
+            border-bottom: 1px solid var(--border-color);
         }
+        
         .video-info {
-            padding: 10px;
+            padding: 15px;
         }
+        
         .video-title {
             font-weight: bold;
-            margin-bottom: 5px;
-            white-space: nowrap;
+            margin-bottom: 8px;
+            font-size: 16px;
+            line-height: 1.4;
+            height: 44px;
             overflow: hidden;
-            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
+        
+        .video-duration {
+            color: #666;
+            font-size: 14px;
+        }
+        
         .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #ff0000;
+            display: none;
+            text-align: center;
+            padding: 15px 0;
+        }
+        
+        .loader-spinner {
+            border: 4px solid rgba(255, 0, 0, 0.1);
+            border-top: 4px solid var(--primary-color);
             border-radius: 50%;
             width: 30px;
             height: 30px;
-            animation: spin 2s linear infinite;
-            display: none;
-            margin: 10px auto;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
         }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
         /* Player modal styles */
         .modal {
             display: none;
@@ -118,48 +191,93 @@
             background-color: rgba(0,0,0,0.8);
             overflow: auto;
         }
+        
         .modal-content {
             position: relative;
             background-color: #000;
             margin: 5% auto;
             padding: 0;
             width: 90%;
-            max-width: 800px;
+            max-width: 900px;
             border-radius: 8px;
             overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
+        
         .modal-video {
             width: 100%;
             display: block;
         }
+        
         .close {
             position: absolute;
-            top: 10px;
+            top: 15px;
             right: 20px;
             color: white;
             font-size: 28px;
             font-weight: bold;
             z-index: 1100;
             cursor: pointer;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
+        
+        .close:hover {
+            color: #ff0000;
+        }
+        
         .video-controls {
             padding: 15px;
-            background-color: #333;
+            background-color: #222;
             color: white;
         }
+        
         .video-title-modal {
             margin: 0;
             padding-bottom: 10px;
             font-size: 18px;
         }
+        
         /* Message for empty video library */
         #emptyLibraryMessage {
             text-align: center;
-            padding: 20px;
-            background-color: #f9f9f9;
+            padding: 30px;
+            background-color: var(--bg-light);
             border-radius: 8px;
             margin-top: 20px;
+            color: #666;
+            font-size: 16px;
             display: none;
+        }
+        
+        /* Progress bar for download */
+        .progress-container {
+            display: none;
+            margin-top: 15px;
+            background-color: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .video-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            }
         }
     </style>
 </head>
@@ -170,10 +288,16 @@
         <div class="downloader">
             <h2>Download a New Video</h2>
             <div class="input-group">
-                <input type="text" id="videoLink" placeholder="Enter YouTube Video URL">
+                <input type="text" id="videoLink" placeholder="Enter YouTube Video URL" autofocus>
                 <button id="downloadBtn" onclick="downloadVideo()">Download</button>
             </div>
-            <div id="loader" class="loader"></div>
+            <div id="loader" class="loader">
+                <div class="loader-spinner"></div>
+                <p>Downloading video... This may take a while</p>
+            </div>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
             <div id="status" class="status" style="display: none;"></div>
         </div>
         
@@ -204,6 +328,13 @@
         // Load videos when the page loads
         document.addEventListener('DOMContentLoaded', loadVideos);
         
+        // Allow Enter key to trigger download
+        document.getElementById('videoLink').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                downloadVideo();
+            }
+        });
+        
         function downloadVideo() {
             let link = document.getElementById("videoLink").value.trim();
             
@@ -212,21 +343,66 @@
                 return;
             }
             
+            // If link doesn't start with http, assume it's a YouTube link
+            if (!link.startsWith('http')) {
+                // Check if it's a YouTube video ID
+                if (link.length === 11 && /^[a-zA-Z0-9_-]{11}$/.test(link)) {
+                    link = `https://www.youtube.com/watch?v=${link}`;
+                } else {
+                    // Try to extract video ID from various formats
+                    const youtubeRegex = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\/]+)/;
+                    const match = link.match(youtubeRegex);
+                    
+                    if (match && match[1]) {
+                        link = `https://www.youtube.com/watch?v=${match[1]}`;
+                    } else {
+                        link = `https://www.youtube.com/watch?v=${link}`;
+                    }
+                }
+            }
+            
             // Show loading indicator and disable button
             document.getElementById("loader").style.display = "block";
             document.getElementById("downloadBtn").disabled = true;
             document.getElementById("status").style.display = "none";
+            document.getElementById("progressContainer").style.display = "block";
+            
+            let progressBar = document.getElementById("progressBar");
+            progressBar.style.width = "5%"; // Start progress
+            
+            // Simulate progress (since we don't have real-time progress from the server)
+            let progress = 5;
+            const progressInterval = setInterval(() => {
+                if (progress < 90) {
+                    progress += Math.random() * 3;
+                    progressBar.style.width = `${progress}%`;
+                }
+            }, 500);
             
             fetch("/download", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ url: link })
             })
-            .then(response => response.json())
+            .then(response => {
+                clearInterval(progressInterval);
+                
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 // Hide loading indicator and enable button
                 document.getElementById("loader").style.display = "none";
                 document.getElementById("downloadBtn").disabled = false;
+                progressBar.style.width = "100%";
+                
+                // Wait a moment to show complete progress
+                setTimeout(() => {
+                    document.getElementById("progressContainer").style.display = "none";
+                    progressBar.style.width = "0%";
+                }, 500);
                 
                 if (data.success) {
                     showStatus(data.message, true);
@@ -237,9 +413,11 @@
                 }
             })
             .catch(error => {
+                clearInterval(progressInterval);
                 document.getElementById("loader").style.display = "none";
                 document.getElementById("downloadBtn").disabled = false;
-                showStatus("Error: " + error, false);
+                document.getElementById("progressContainer").style.display = "none";
+                showStatus(`Error: ${error.message}`, false);
             });
         }
         
@@ -248,11 +426,19 @@
             statusElement.textContent = message;
             statusElement.className = "status " + (isSuccess ? "success" : "error");
             statusElement.style.display = "block";
+            
+            // Scroll to status message
+            statusElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
         
         function loadVideos() {
             fetch("/videos")
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(videos => {
                 const videoGrid = document.getElementById("videoGrid");
                 const emptyMessage = document.getElementById("emptyLibraryMessage");
@@ -267,6 +453,9 @@
                 
                 emptyMessage.style.display = "none";
                 
+                // Sort videos by most recently added (assuming IDs are UUID timestamps)
+                videos.sort((a, b) => b.id.localeCompare(a.id));
+                
                 videos.forEach(video => {
                     const card = document.createElement("div");
                     card.className = "video-card";
@@ -277,12 +466,18 @@
                     // Create video thumbnail
                     let thumbnailUrl = video.thumbnail || "/static/placeholder-thumbnail.jpg";
                     
+                    // Format file size
+                    let fileSizeText = video.file_size ? `${video.file_size.toFixed(1)} MB` : "";
+                    
+                    // Format duration
+                    let durationText = formatDuration(video.duration);
+                    
                     // Create video card HTML
                     card.innerHTML = `
-                        <img class="video-thumbnail" src="${thumbnailUrl}" alt="${video.title}">
+                        <img class="video-thumbnail" src="${thumbnailUrl}" alt="${video.title}" onerror="this.src='/static/placeholder-thumbnail.jpg'">
                         <div class="video-info">
                             <div class="video-title">${video.title}</div>
-                            <div class="video-duration">${formatDuration(video.duration)}</div>
+                            <div class="video-duration">${durationText} · ${fileSizeText}</div>
                         </div>
                     `;
                     
@@ -299,10 +494,15 @@
         function formatDuration(seconds) {
             if (!seconds) return "Unknown duration";
             
-            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
             const remainingSeconds = seconds % 60;
             
-            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            }
         }
         
         // Video player modal functions
@@ -323,6 +523,9 @@
             // Load and play the video
             modalVideo.load();
             modalVideo.play();
+            
+            // Prevent scrolling of background
+            document.body.style.overflow = "hidden";
         }
         
         function closeModal() {
@@ -334,6 +537,9 @@
             
             // Hide the modal
             modal.style.display = "none";
+            
+            // Re-enable scrolling
+            document.body.style.overflow = "auto";
         }
         
         // Close the modal if the user clicks outside the modal content
@@ -343,6 +549,16 @@
                 closeModal();
             }
         }
+        
+        // Also handle Escape key to close modal
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById("videoModal");
+                if (modal.style.display === "block") {
+                    closeModal();
+                }
+            }
+        });
     </script>
 </body>
 </html>

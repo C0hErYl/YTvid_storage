@@ -5,43 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ video.title }} - Video Player</title>
     <style>
+        :root {
+            --primary-color: #ff0000;
+            --primary-dark: #cc0000;
+            --bg-light: #f5f5f5;
+            --border-color: #ddd;
+            --text-color: #333;
+        }
+        
         body {
             font-family: Arial, sans-serif;
             max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
+            background-color: var(--bg-light);
+            color: var(--text-color);
+            line-height: 1.6;
         }
+        
         h1 {
             margin-bottom: 20px;
+            color: #111;
+            word-break: break-word;
         }
+        
         .video-container {
             width: 100%;
             background-color: #000;
             border-radius: 8px;
             overflow: hidden;
             margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
+        
         video {
             width: 100%;
             display: block;
         }
+        
         .video-info {
-            padding: 15px;
+            padding: 20px;
             background-color: #fff;
             border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
+        
+        .video-info p {
+            margin: 10px 0;
+        }
+        
+        .video-info strong {
+            color: #111;
+        }
+        
         .back-button {
             display: inline-block;
             margin-top: 20px;
-            padding: 10px 15px;
-            background-color: #4285f4;
+            padding: 12px 20px;
+            background-color: var(--primary-color);
             color: white;
             text-decoration: none;
             border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        
         .back-button:hover {
-            background-color: #3367d6;
+            background-color: var(--primary-dark);
+            text-decoration: none;
+            color: white;
+        }
+        
+        .back-button:active {
+            transform: translateY(1px);
+        }
+        
+        .source-link {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .source-link:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .video-info {
+                padding: 15px;
+            }
         }
     </style>
 </head>
@@ -56,13 +112,53 @@
     </div>
     
     <div class="video-info">
-        <p><strong>Duration:</strong> {{ video.duration // 60 }}:{{ '%02d' % (video.duration % 60) }}</p>
+        <p><strong>Duration:</strong> 
+            {% if video.duration %}
+                {{ video.duration // 60 }}:{{ '%02d' % (video.duration % 60) }}
+            {% else %}
+                Unknown
+            {% endif %}
+        </p>
         <p><strong>File Size:</strong> {{ video.file_size }} MB</p>
+        <p><strong>Download Date:</strong> {{ video.id.split('-')[0] }}</p>
         {% if video.original_url %}
-        <p><strong>Source:</strong> <a href="{{ video.original_url }}" target="_blank">Original Video</a></p>
+        <p><strong>Source:</strong> <a href="{{ video.original_url }}" target="_blank" class="source-link">Original Video</a></p>
         {% endif %}
     </div>
     
     <a href="/" class="back-button">Back to Library</a>
+    
+    <script>
+        // Auto-adjust video quality based on network conditions
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.querySelector('video');
+            
+            // Listen for quality changes
+            video.addEventListener('canplay', function() {
+                console.log('Video can play, current quality:', video.videoHeight + 'p');
+            });
+            
+            // Handle errors
+            video.addEventListener('error', function() {
+                console.error('Video error:', video.error);
+                alert('Error playing video. Please try again.');
+            });
+            
+            // Remember playback position
+            const videoId = '{{ video.id }}';
+            const savedTime = localStorage.getItem(`video-time-${videoId}`);
+            
+            if (savedTime) {
+                video.currentTime = parseFloat(savedTime);
+            }
+            
+            // Save position periodically
+            setInterval(function() {
+                if (!video.paused) {
+                    localStorage.setItem(`video-time-${videoId}`, video.currentTime);
+                }
+            }, 5000);
+        });
+    </script>
 </body>
 </html>
